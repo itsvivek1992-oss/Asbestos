@@ -310,16 +310,22 @@ export default function HomePage() {
         </section>
       </main>
 
-      {/* 15. FOOTER */}
-      <footer className="foot">
+            <footer className="foot">
         <div className="wrap">
           <p className="wordmark">asbestosadvice.uk</p>
-          <p>
-            Asbestos, Answered is general guidance. It is not a substitute for an asbestos survey, a laboratory test,
-            legal advice or a doctor. Published by Core Asbestos Services Ltd.{' '}
-            {/* TO CONFIRM: Companies House number and registered office. */}
-            <span data-todo="company">[Company number and registered office.]</span>
+
+          <p className="foot__disclaimer">
+            Asbestos, Answered is general guidance. It is not a substitute
+            for an asbestos survey, a laboratory test, legal advice or a doctor.
           </p>
+
+          <div className="foot__company">
+            <p>Published by Core Asbestos Services Ltd.</p>
+            <address>
+              71–75 Shelton Street, London, WC2H 9JQ
+            </address>
+          </div>
+
           <nav aria-label="Legal">
             <a href="/privacy">Privacy</a>
             <a href="/terms">Terms of sale</a>

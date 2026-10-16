@@ -19,6 +19,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preload" href="/assets/fonts/archivo-latin-700-normal.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
         <link rel="preload" href="/assets/fonts/hanken-grotesk-latin-400-normal.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
         <link rel="stylesheet" href="/assets/styles.css" />
+           <link rel="stylesheet" href="/assets/buy-button.css" />
         {/* DEV: CookieYes / consent-mode script goes here. Meta Pixel, GA4 and
             Clarity must not fire until consent is given — see lib/analytics.ts. */}
       </head>

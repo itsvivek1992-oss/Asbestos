@@ -1,0 +1,149 @@
+/* Buy button: brand red, raised 3D look with animated shadow motion.
+   - gentle floating bob, with a ground shadow that breathes in sync
+   - soft red pulse ring radiating outwards
+   - shine sweep across the face
+   - on hover/focus: turns yellow, lifts, fires a yellow burst ring
+   - on press: sinks down into its edge
+   Applies to every BuyButton on the site (a.btn[data-buy]).
+   To re-colour it, change the values in :root below. */
+:root {
+  /* resting state (brand red) */
+  --buy-face: #B92F2C;
+  --buy-edge: #7A1B19;
+  --buy-text: #FFFFFF;
+  --buy-ring: rgba(185, 47, 44, 0.55);
+  /* hover / focus state (yellow) */
+  --buy-hover-face: #F3C316;
+  --buy-hover-edge: #B88F00;
+  --buy-hover-text: #0E0F13;
+  --buy-hover-ring: rgba(243, 195, 22, 0.7);
+
+  --buy-radius: 14px; /* 0 = square corners like the rest of the site */
+}
+
+.btn[data-buy] {
+  --buy-depth: 6px;
+  position: relative;
+  isolation: isolate;
+  border: 0;
+  border-radius: var(--buy-radius);
+  background-color: var(--buy-face);
+  /* shine band, moved across by the buyShine animation */
+  background-image: linear-gradient(105deg, transparent 44%, rgba(255, 255, 255, 0.5) 50%, transparent 56%);
+  background-size: 250% 100%;
+  background-position: 100% 0;
+  background-repeat: no-repeat;
+  color: var(--buy-text);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.4),
+    0 var(--buy-depth) 0 var(--buy-edge);
+  animation:
+    buyFloat 3.2s ease-in-out infinite,
+    buyShine 3.6s ease-in-out infinite;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+@keyframes buyFloat {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -4px; }
+}
+@keyframes buyShine {
+  0%, 55% { background-position: 100% 0; }
+  100% { background-position: 0% 0; }
+}
+
+/* pulse ring radiating out from the button */
+.btn[data-buy]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  animation: buyRing 2.6s ease-out infinite;
+}
+@keyframes buyRing {
+  0% { box-shadow: 0 0 0 0 var(--buy-ring); }
+  70%, 100% { box-shadow: 0 0 0 18px rgba(185, 47, 44, 0); }
+}
+
+/* ground shadow that shrinks and fades as the button floats up */
+.btn[data-buy]::after {
+  content: "";
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  bottom: calc(-1 * (var(--buy-depth) + 12px));
+  height: 12px;
+  z-index: -2;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.45), transparent 70%);
+  filter: blur(3px);
+  pointer-events: none;
+  animation: buyGround 3.2s ease-in-out infinite;
+}
+@keyframes buyGround {
+  0%, 100% { transform: translateY(0) scaleX(1); opacity: 0.75; }
+  50% { transform: translateY(4px) scaleX(0.82); opacity: 0.4; }
+}
+
+/* hover / keyboard focus: turns yellow, lifts, yellow burst ring */
+.btn[data-buy]:hover,
+.btn[data-buy]:focus-visible {
+  background-color: var(--buy-hover-face);
+  background-image: linear-gradient(105deg, transparent 44%, rgba(255, 255, 255, 0.5) 50%, transparent 56%);
+  color: var(--buy-hover-text);
+  transform: translateY(-3px);
+  animation-play-state: paused;
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.55),
+    0 calc(var(--buy-depth) + 3px) 0 var(--buy-hover-edge);
+}
+.btn[data-buy]:hover::before,
+.btn[data-buy]:focus-visible::before {
+  animation: buyBurst 0.6s ease-out 1;
+}
+@keyframes buyBurst {
+  0% { box-shadow: 0 0 0 0 var(--buy-hover-ring); }
+  100% { box-shadow: 0 0 0 22px rgba(243, 195, 22, 0); }
+}
+.btn[data-buy]:hover::after,
+.btn[data-buy]:focus-visible::after {
+  animation: none;
+  transform: translateY(6px) scaleX(0.78);
+  opacity: 0.5;
+}
+
+/* pressed: sinks down into its edge */
+.btn[data-buy]:active {
+  background-color: var(--buy-hover-face);
+  color: var(--buy-hover-text);
+  transform: translateY(calc(var(--buy-depth) - 1px));
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.55),
+    0 1px 0 var(--buy-hover-edge);
+}
+.btn[data-buy]:active::after { opacity: 0.2; transform: translateY(-3px) scaleX(0.95); }
+
+.btn[data-buy] svg { transition: transform 0.2s ease; }
+.btn[data-buy]:hover svg { transform: translateX(5px); }
+
+/* while checkout is being created */
+.btn[data-buy][aria-busy="true"] { opacity: 0.8; pointer-events: none; cursor: progress; animation-play-state: paused; }
+
+/* slimmer edge on the mobile sticky bar */
+.sticky .btn[data-buy] { --buy-depth: 4px; }
+
+/* a little more room under the button for the ground shadow */
+.btn[data-buy] + .micro { margin-top: 18px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .btn[data-buy],
+  .btn[data-buy]::before,
+  .btn[data-buy]::after { animation: none; }
+  .btn[data-buy], .btn[data-buy] svg { transition: none; }
+}

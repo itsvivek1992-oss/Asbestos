@@ -1,16 +1,17 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { siteConfig } from '@/lib/siteConfig';
 
-// DEV: Stripe redirects here with ?session_id=cs_xxx after a successful
-// payment. We look the order up server-side (never trust query params for
-// order details) to get the review code and download link.
-export default function ThankYouPage() {
+type Order = { reviewCode: string; downloadUrl: string; email: string };
+
+// Stripe redirects here with ?session_id=cs_xxx after a successful payment.
+// The order is looked up server-side (never trust query params for order details).
+function ThankYouContent() {
   const params = useSearchParams();
   const sessionId = params.get('session_id');
-  const [order, setOrder] = useState<{ reviewCode: string; downloadUrl: string; email: string } | null>(null);
+  const [order, setOrder] = useState<Order | null>(null);
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [copied, setCopied] = useState(false);
 
@@ -19,19 +20,37 @@ export default function ThankYouPage() {
       setStatus('error');
       return;
     }
-    fetch(`${siteConfig.apiBaseUrl}/api/orders/by-session/${encodeURIComponent(sessionId)}`)
-      .then((res) => {
-        if (!res.ok) throw new Error('not found');
-        return res.json();
-      })
-      .then((data) => {
-        setOrder(data);
-        setStatus('ready');
-        // Purchase event is sent server-side from the Stripe webhook (with
-        // Conversions API dedup), not from here, so a page refresh can never
-        // double count a sale.
-      })
-      .catch(() => setStatus('error'));
+    const id: string = sessionId;
+    let cancelled = false;
+    let attempts = 0;
+
+    // The webhook can land a few seconds after the redirect, so retry briefly.
+    async function load() {
+      try {
+        const res = await fetch(`${siteConfig.apiBaseUrl}/api/orders/by-session/${encodeURIComponent(id)}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (!cancelled) {
+            setOrder(data);
+            setStatus('ready');
+          }
+          return;
+        }
+      } catch {
+        // fall through and retry
+      }
+      attempts += 1;
+      if (attempts < 8 && !cancelled) {
+        setTimeout(load, 2000);
+      } else if (!cancelled) {
+        setStatus('error');
+      }
+    }
+
+    load();
+    return () => {
+      cancelled = true;
+    };
   }, [sessionId]);
 
   function copyCode() {
@@ -52,9 +71,9 @@ export default function ThankYouPage() {
 
         {status === 'error' && (
           <p className="body">
-            We could not find that order automatically. Check your email for the download link and review code — it
-            can take a minute to arrive. Still nothing? Use the{' '}
-            <a href="/resend">resend page</a> or email support@asbestosadvice.uk.
+            We could not find that order automatically. Check your email for the download link and review code. It
+            can take a minute to arrive. Still nothing? Use the <a href="/resend">resend page</a> or email
+            hello@asbestosadvice.uk.
           </p>
         )}
 
@@ -97,5 +116,21 @@ export default function ThankYouPage() {
         )}
       </div>
     </main>
+  );
+}
+
+export default function ThankYouPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="sec">
+          <div className="wrap" style={{ maxWidth: 640 }}>
+            <p className="body">Loading…</p>
+          </div>
+        </main>
+      }
+    >
+      <ThankYouContent />
+    </Suspense>
   );
 }
